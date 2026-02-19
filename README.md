@@ -1,5 +1,7 @@
 # SurFTP
 
+** THIS PROJECT IS IN DEVELOPMENT - DO NOT USE IN PRODUCTION YET **
+
 An SFTP server with built-in user management. SurFTP wraps OpenSSH's `sshd`/`internal-sftp` for protocol handling and provides a CLI and terminal UI for administration. User data is stored in SQLite.
 
 ## Requirements
@@ -24,7 +26,7 @@ sudo cp surftp /usr/local/bin/
 
 | Path | Purpose |
 |------|---------|
-| `/var/lib/surftp/surftp.db` | SQLite database |
+| `/var/lib/surftp/surftp.db` | SQLite database (user data, server data) |
 | `/etc/surftp/sshd_config` | Auto-generated sshd config |
 | `/etc/surftp/ssh_host_ed25519_key` | Host key (auto-generated on first start) |
 | `/var/run/surftp/sshd.pid` | PID file for the sshd process |
