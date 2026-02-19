@@ -1,5 +1,7 @@
 # SurFTP
 
+<img src="logo.jpg" alt="jane" width="256">
+  
 ** THIS PROJECT IS IN DEVELOPMENT - DO NOT USE IN PRODUCTION YET **
 
 An SFTP server with built-in user management. SurFTP wraps OpenSSH's `sshd`/`internal-sftp` for protocol handling and provides a CLI and terminal UI for administration. User data is stored in SQLite.
