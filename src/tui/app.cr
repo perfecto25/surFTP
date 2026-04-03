@@ -59,6 +59,8 @@ module SurFTP
       end
 
       private def handle_input(key : String) : Symbol
+        return :quit if key == "ctrl-c"
+
         if @confirming_delete
           return handle_delete_confirm(key)
         end
@@ -118,7 +120,6 @@ module SurFTP
           if user = user_list.current_user
             begin
               UserRepo.delete(user.username)
-              UserManager.delete_system_user(user.username)
             rescue
             end
             @user_list = UserListView.new

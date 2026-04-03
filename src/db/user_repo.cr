@@ -75,6 +75,52 @@ module SurFTP
       nil
     end
 
+    def self.add_session(username : String, remote : String) : Int64
+      db = Database.connection
+      result = db.exec("INSERT INTO active_sessions (username, remote) VALUES (?, ?)", username, remote)
+      result.last_insert_id
+    end
+
+    def self.remove_session(id : Int64)
+      Database.connection.exec("DELETE FROM active_sessions WHERE id = ?", id)
+    end
+
+    def self.clear_sessions
+      Database.connection.exec("DELETE FROM active_sessions")
+    end
+
+    record ActiveSession, id : Int64, username : String, remote : String, connected_at : String
+
+    def self.list_sessions : Array(ActiveSession)
+      sessions = [] of ActiveSession
+      Database.connection.query("SELECT id, username, remote, connected_at FROM active_sessions ORDER BY connected_at") do |rs|
+        rs.each do
+          sessions << ActiveSession.new(
+            id: rs.read(Int64),
+            username: rs.read(String),
+            remote: rs.read(String),
+            connected_at: rs.read(String)
+          )
+        end
+      end
+      sessions
+    end
+
+    def self.push_kill(username : String)
+      db = Database.connection
+      db.exec("INSERT INTO kill_pending (username) VALUES (?)", username)
+    end
+
+    def self.pop_kills : Array(String)
+      db = Database.connection
+      usernames = [] of String
+      db.query("SELECT username FROM kill_pending") do |rs|
+        rs.each { usernames << rs.read(String) }
+      end
+      db.exec("DELETE FROM kill_pending") unless usernames.empty?
+      usernames
+    end
+
     def self.set_config(key : String, value : String)
       db = Database.connection
       db.exec("INSERT OR REPLACE INTO config (key, value) VALUES (?, ?)", key, value)

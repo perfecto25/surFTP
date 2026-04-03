@@ -14,6 +14,8 @@ dependencies:
   db:
     github: crystal-lang/crystal-db
 
+# System dependency: libssh-dev (Debian/Ubuntu) or libssh-devel (Fedora)
+
 crystal: ">= 1.19.1"
 
 license: MIT

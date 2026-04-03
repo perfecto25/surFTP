@@ -1,0 +1,17 @@
+prod:
+  action: push
+  host: somehostftp.com
+  port: 22
+  username: user1
+  password: passwordabc123
+  auth_type: password
+
+dev:
+  action: pull
+  host: dev.somehostftp.com
+  port: 2500
+  username: devuser1
+  auth_type: key
+  private_key: /path/to/private/key
+  remote_path: /path/to/remote/directory
+  local_path: /path/to/local/directory

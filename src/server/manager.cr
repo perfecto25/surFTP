@@ -1,40 +1,30 @@
 module SurFTP
   class ServerManager
-    PID_FILE = ConfigGenerator::PID_FILE
+    @@server : SSHServer? = nil
 
-    def self.start(port : Int32 = 2222)
+    def self.start(config : Config)
       if running?
-        STDERR.puts "Server is already running (PID: #{read_pid})"
+        STDERR.puts "Server is already running"
         return
       end
 
-      ConfigGenerator.write_config(port)
+      Log.setup(config)
+      AuditLog.configure(config.audit_log)
+      Log.info "Starting SurFTP server"
 
-      # Validate config
-      stderr = IO::Memory.new
-      result = Process.run(
-        "/usr/sbin/sshd",
-        ["-t", "-f", ConfigGenerator::CONFIG_FILE],
-        error: stderr,
-        output: Process::Redirect::Close
-      )
-      unless result.success?
-        raise "sshd config validation failed: #{stderr}"
+      UserRepo.set_config("server_pid", Process.pid.to_s)
+      UserRepo.clear_sessions
+
+      Signal::USR1.trap do
+        UserRepo.pop_kills.each do |username|
+          count = SessionRegistry.kill(username)
+          Log.info "Killed #{count} session(s) for user '#{username}'"
+        end
       end
 
-      # Start sshd
-      stderr = IO::Memory.new
-      result = Process.run(
-        "/usr/sbin/sshd",
-        ["-f", ConfigGenerator::CONFIG_FILE],
-        error: stderr,
-        output: Process::Redirect::Close
-      )
-      unless result.success?
-        raise "Failed to start sshd: #{stderr}"
-      end
-
-      puts "SFTP server started on port #{port}"
+      server = SSHServer.new(config)
+      @@server = server
+      server.start
     end
 
     def self.stop
@@ -43,37 +33,37 @@ module SurFTP
         return
       end
 
-      pid = read_pid
-      if pid
-        Process.signal(Signal::TERM, pid)
-        puts "Server stopped (PID: #{pid})"
-        File.delete(PID_FILE) if File.exists?(PID_FILE)
+      if server = @@server
+        server.stop
+        Log.info "Server stopped"
+        puts "Server stopped"
       end
+      @@server = nil
+      UserRepo.set_config("server_pid", "")
     end
 
     def self.status
       if running?
-        pid = read_pid
-        port = UserRepo.get_config("port") || "2222"
         puts "SFTP server is running"
-        puts "  PID:  #{pid}"
-        puts "  Port: #{port}"
       else
         puts "SFTP server is not running"
       end
     end
 
     def self.running? : Bool
-      pid = read_pid
-      return false unless pid
-      File.exists?("/proc/#{pid}")
+      if server = @@server
+        return true if server.running?
+      end
+      port_in_use?
     end
 
-    def self.read_pid : Int64?
-      return nil unless File.exists?(PID_FILE)
-      content = File.read(PID_FILE).strip
-      return nil if content.empty?
-      content.to_i64?
+    private def self.port_in_use? : Bool
+      port = (UserRepo.get_config("port") || "2222").to_i
+      socket = TCPSocket.new("127.0.0.1", port, connect_timeout: 0.5.seconds)
+      socket.close
+      true
+    rescue
+      false
     end
   end
 end

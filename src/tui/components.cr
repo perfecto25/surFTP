@@ -68,8 +68,10 @@ module SurFTP
         bytes_read = STDIN.read(buf)
         return "" if bytes_read == 0
 
-        if buf[0] == 27 && bytes_read > 1 # Escape sequence
-          if buf[1] == 91 # CSI
+        if buf[0] == 27
+          if bytes_read == 1
+            return "escape"
+          elsif buf[1] == 91 # CSI
             case buf[2]
             when 65 then return "up"
             when 66 then return "down"

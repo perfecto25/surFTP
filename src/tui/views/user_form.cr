@@ -148,7 +148,8 @@ module SurFTP
           return :redraw
         end
 
-        home = @home.blank? ? "/srv/surftp/#{@username}" : @home
+        home_base = UserRepo.get_config("home_base") || "/srv/surftp"
+        home = @home.blank? ? "#{home_base}/#{@username}" : @home
         password = @password.blank? ? nil : @password
 
         begin
@@ -156,18 +157,11 @@ module SurFTP
             if pw = password
               hash = SurFTP::PasswordUtils.hash_password(pw)
               UserRepo.update_password(@username, hash)
-              begin
-                UserManager.set_password(@username, pw)
-              rescue
-              end
             end
           else
             hash = password ? SurFTP::PasswordUtils.hash_password(password) : nil
             UserRepo.create(@username, hash, home)
-            begin
-              UserManager.create_system_user(@username, home, password)
-            rescue
-            end
+            Dir.mkdir_p(File.join(home, "files")) rescue nil
           end
           :saved
         rescue ex

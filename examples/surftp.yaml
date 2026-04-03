@@ -1,0 +1,19 @@
+# SurFTP Configuration
+# Copy to /etc/surftp/surftp.yaml
+
+# Logging
+log:
+  # Level: debug, info, warn, error
+  level: info
+  # Output: stdout, stderr, or a file path
+  file: stdout
+
+# Server settings
+server:
+  bind_address: 0.0.0.0
+  port: 2222
+  host_key: /etc/surftp/ssh_host_ed25519_key
+
+# User settings
+users:
+  home_base: /srv/surftp

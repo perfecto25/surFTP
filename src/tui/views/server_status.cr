@@ -8,7 +8,6 @@ module SurFTP
         Components.header("SurFTP - Server Status")
 
         running = ServerManager.running?
-        pid = ServerManager.read_pid
         port = UserRepo.get_config("port") || "2222"
 
         row = 4
@@ -22,11 +21,6 @@ module SurFTP
 
         Terminal.move_to(row + 1, 3)
         print "#{Terminal::BOLD}Port:#{Terminal::RESET}   #{port}"
-
-        if running && pid
-          Terminal.move_to(row + 2, 3)
-          print "#{Terminal::BOLD}PID:#{Terminal::RESET}    #{pid}"
-        end
 
         user_count = UserRepo.list.size
         Terminal.move_to(row + 4, 3)
@@ -59,8 +53,11 @@ module SurFTP
               ServerManager.stop
               @message = "Server stopped"
             else
+              config = Config.load
               port = (UserRepo.get_config("port") || "2222").to_i
-              ServerManager.start(port)
+              config.port = port
+              UserRepo.set_config("home_base", config.home_base)
+              spawn { ServerManager.start(config) }
               @message = "Server started on port #{port}"
             end
           rescue ex

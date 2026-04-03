@@ -45,6 +45,22 @@ module SurFTP
           value TEXT NOT NULL
         )
       SQL
+
+      db.exec <<-SQL
+        CREATE TABLE IF NOT EXISTS kill_pending (
+          username TEXT NOT NULL,
+          created_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      SQL
+
+      db.exec <<-SQL
+        CREATE TABLE IF NOT EXISTS active_sessions (
+          id INTEGER PRIMARY KEY AUTOINCREMENT,
+          username TEXT NOT NULL,
+          remote TEXT NOT NULL,
+          connected_at TEXT DEFAULT CURRENT_TIMESTAMP
+        )
+      SQL
     end
   end
 end
